@@ -1,0 +1,7 @@
+You can find 3 files for 3 tasks on this link.  I have already applied filters to have only desired packets ((wlan.ta == b0:55:08:4a:a3:93) && (wlan.ra == 78:31:c1:ec:ae:90) && wlan_radio.11n.mcs_index).
+
+In task 2, I add obstacles step by step. First I pushed a sofa, then added a door, then a human body, and finally, I inserted my AP (a pocket modem) in a cooking pot. Then walked to the laptop.
+
+task 3 is challenging. To have enough interference to affect the MCS index, there should be several available access points and enough devices with enough traffic load. I have tried to watch HD/4K videos on my tablet and phone and at the end watching same video on the laptop. So, don't expect too much change in the MCS index.
+
+When you are analyzing files, you can discuss how sensitive is MSC index to RSSI and also whether any other factor can affect MCS. You can check the SNR as well. The WIFi version is 802.11n and you can investigate MCS index using the related reference table: https://en.wikipedia.org/wiki/IEEE_802.11n-2009#Data_rates

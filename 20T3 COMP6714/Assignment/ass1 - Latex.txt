@@ -1,0 +1,238 @@
+\documentclass[11pt]{article}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{color}
+\usepackage{extarrows}
+\usepackage{amsmath}
+\usepackage{diagbox}
+\usepackage{multirow}
+
+\geometry {a4paper,left=3.18cm,right=3.18cm,top=2.54cm,bottom=2.54cm}
+\definecolor{Red}{rgb}{1,0,0}
+
+\title{COMP6714 Assignment 1}
+\author{Hongxiao Jin (z5241154)}
+\date{}
+
+\begin{document}\setlength{\baselineskip}{18pt}
+\maketitle
+
+\section*{Question 1}
+\begin{algorithm}[H]
+  \caption{Q1$(p_{1},p_{2},p_{\$})$}
+  \LinesNumbered
+  $answer \gets \emptyset$;\\
+  \While {$p_{1} \neq\ $\bf{nil}$\ \land\ p_{2} \neq\ $\bf{nil}}{
+        \eIf {\bf{doc}$(p_{1}) =\ $\bf{doc}$(p_{2})$}{
+            $l\gets[\ ]$;\\
+            $pp_{1}\gets$positions$(p_{1})$; $pp_{2}\gets$positions$(p_{2})$;\\
+            \While {$pp_{1}\neq\ $\bf{nil}}{
+                \textcolor{Red}{$end\gets\ $skipTo$(p_{\$},$docID$(pp_{1}),pos(pp_{1}))$}\\
+                \While {$pp_{2}\neq\ $\bf{nil}}{
+                    \eIf {\textcolor{Red}{pos$(pp_{2})<end$}}{
+                        \If {\textcolor{Red}{pos$(pp_{2})>$ pos$(pp_{1})$}}{
+                            add$(l,$pos$(pp_{2}))$;
+                        }
+                    }{
+                        \textcolor{Red}{break;}
+                    }
+                    {$pp_{2} \gets$ next$(pp_{2})$};
+                }
+                \While {\textcolor{Red}{$l \neq [\ ]\land l[1]<$ pos$(pp_{1})$}}{
+                    delete$(l[1])$;
+                }
+                \For  {\bf{each} $ps\in l$}{
+                    $answer\gets answer \cup [$docID$(p_{1}),$pos$(pp_{1}),ps]$;
+                }
+                $pp_{1} \gets$ next$(pp_{1})$;\\ 
+            }
+            $p_{1}\gets$ next$(p_{1})$; $p_{2}\gets$ next$(p_{2})$;
+        }{
+            \eIf {\bf{docID}$(p_{1})<$\bf{ docID}$(p_{2})$}{
+                $p_{1}\gets$ next$(p_{1})$;
+            }{
+                $p_{2}\gets$ next$(p_{2})$;
+            }
+        }
+  }
+  \Return {$answer$}
+\end{algorithm}
+
+\newpage
+\section*{Question 2}
+\subsection*{(1)} {
+At first, the smallest$(\bf{Z_{0}})$ is in memory. If $\bf{Z_{0}}$ gets to the upper bound of the memory, since the memory is full, it will be written into disk as $\bf{I_{0}}$. We can treat this $\bf{I_{0}}$ as $\bf{Generation\ 0}$. However, if $\bf{I_{0}}$ already exists, $\bf{Z_{0}}$ and $\bf{I_{0}}$ will be merged into a new sub-index $\bf{Z_{1}}$. At this time, if there is no $\bf{I_{1}}$, $\bf{Z_{1}}$ will be written to disk as $\bf{I_{1}}(\bf{Generation\ 1})$. While if $\bf{I_{1}}$ is in disk, $\bf{Z_{1}}$ will merge with $\bf{I_{1}}$ to form $\bf{Z_{2}}$ and so on. \\
+From the algorithm of $\bf{logarithmic\ merge}$, we can also know that this strategy maintain a series of indexes and each twice as large as the previous one. \\
+Let $\bf{n}$ represent the number of sub-indexes. \\
+- The $1^{st}$ layer can record $\bf{M}$ pages; \\
+- The $2^{nd}$ layer can record $\bf{2M}$ pages; \\
+- $\ldots\ldots$ \\
+- The $n^{th}$ layer can record $\bf{2^{n-1}\cdot M}$ pages; \\
+Thus, $M\cdot t=M\cdot(1+2+2^{2}+2^{3}+\cdots+2^{n-1})$ \\
+We can figure out $t=2^{n}-1$ and $n=log_{2}(t+1)$. \\
+$\bf{Therefore}$, $logarithmic\ merge$ will result in at most $\bf{\lceil log_{2}t\rceil}$ sub-indexes.
+}
+
+\subsection*{(2)} {
+First of all, writing all pages into disk will cost $\bf{M\cdot t}$. \\
+Then, we should consider $\bf{merging\ cost}$. \\
+According to $\bf{(1)}$, the number of sub-indexes $\bf{n=\lceil log_{2}t\rceil}$, so sub-indexes can be record as $\bf{I_{0},I_{1},I_{2},\ldots,I_{n-1}}$. \\
+Since each index is twice as large as the previous one, we can conclude that \\
+$2^{1}\cdot I_{0}=2^{0}\cdot I_{1}$ \\
+$2^{2}\cdot I_{0}=2^{1}\cdot I_{1}=2^{0}\cdot I_{2}$ \\
+$2^{3}\cdot I_{0}=2^{2}\cdot I_{1}=2^{1}\cdot I_{2}=2^{0}\cdot I_{3}$ \\
+$\ldots\ldots$ \\
+$2^{n-1}\cdot I_{0}=2^{n-2}\cdot I_{1}=2^{n-3}\cdot I_{2}=\ldots=2^{1}\cdot I_{n-2}=2^{0}\cdot I_{n-1}$ \\
+Every time when one $I_{n-1}$ Generating, two $I_{n-2}$ need to be read. Before reading two $I_{n-2}$, they have to be written into the disk. \\
+Therefore, except every $I_{0}$ is read once and every $I_{n-1}$ is written once, the parameters generated in this process are read once and written once respectively. \\
+The calculation process is as follows: \\
+\begin{align*} 
+merge\_cost &= (2^{n-1}\cdot 2^{0}+2*(2^{n-2}\cdot 2^{1}+2^{n-3}\cdot 2^{2} M+\ldots+2^{1}\cdot 2^{n-2})+2^{0}\cdot 2^{n-1})\cdot M \\
+&= M\cdot (2^{n}+2^{n}\cdot(n-2)) \\
+&= M\cdot 2^{n}\cdot(n-1) \\
+&= M\cdot t\cdot(log_{2}{t}-1) \\
+total\_cost &= write\_cost + merge\_cost \\
+&= M\cdot t+M\cdot t\cdot(log_{2}{t}-1) \\
+&= O(M\cdot t\cdot log_{2}t)
+\end{align*}
+Therefore, the total I/O cost of the logarithmic merge is $O(t\cdot M\cdot log_{2}t)$.
+}
+
+\newpage
+\section*{Question 3}
+Decode: $01000101\;11110001\;01110000\;00110000\;11110110\;11011$\\
+$0\ $:$\ \bf{1}$\\
+Let $10\;0\;0\ $represents number $\bf{k_{1}}$
+\par\setlength\parindent{2em} {$\because k_{1dd} = \lfloor log_{2}(k_{1d}+1) \rfloor = 1$}
+\par\setlength\parindent{2.8em} {$k_{1dr} = (k_{1d}+1)-2^{k_{1dd}} = 0$}
+\par\setlength\parindent{2em} {$\therefore k_{1d} = 1$}
+\par\setlength\parindent{2em} {$\because k_{1r} = k_{1}-2^{k_{1d}}=0$}
+\par\setlength\parindent{2em} {$\therefore k_{1} = 2$}
+\par\setlength\parindent{2em} {Thus, $10\;0\;0\ $represents $\bf{2}$.} \\
+Let $10\;1\;11\ $represents number $\bf{k_{2}}$
+\par\setlength\parindent{2em} {$\because k_{2dd} = \lfloor log_{2}(k_{2d}+1) \rfloor = 1$}
+\par\setlength\parindent{2.8em} {$k_{2dr} = (k_{2d}+1)-2^{k_{2dd}} = 1$}
+\par\setlength\parindent{2em} {$\therefore k_{2d} = 2$}
+\par\setlength\parindent{2em} {$\because k_{2r} = k_{2}-2^{k_{d}}=3$}
+\par\setlength\parindent{2em} {$\therefore k_{2} = 7$}
+\par\setlength\parindent{2em} {Thus, $10\;1\;11\ $represents $\bf{7}$.} \\
+Similarly,we can calculate:\\
+$110\;00\;101$:$\ \bf{13}$\\
+$110\;00\;000$:$\ \bf{8}$\\
+$110\;00\;011$:$\ \bf{11}$\\
+$110\;11\;011011$:$\ \bf{91}$\\
+Therefore, the result of decoding is $1,\;2,\;7,\;13,\;8,\;11,\;91$. \\
+Since these numbers 
+The document IDs are $1,\;3,\;10,\;23,\;31,\;42,\;133$.
+
+
+
+\newpage
+\section*{Question 4}
+\subsection*{(1)} {
+$\bf{Line\ 21}$ causes the bug in the algorithm in Figure 2. \\
+The main problem is the $\bf{pickTerm()}$ method. According to the original paper, we can know that $\bf{pickTerm()}$ selects the term with the maximal idf. So if the idf of a term is maximum among all terms and is the $\bf{pTerm}$ in one cycle, this algorithm will end up in an infinite loop.
+}
+\subsection*{(2)} {
+The table below is from lecture 5b. Infinite loop would appear in the process of this algorithm.
+\begin{center}
+\begin{tabular}{p{2cm}<{\centering}|p{2cm}<{\centering}|p{2cm}<{\centering}|p{2cm}<{\centering}}
+& A     & B     & C \\
+\hline   {UB}   & $4$ & $5$ & $8$ \\
+\hline
+\multirow{6}{*}{List}
+& $\langle1,3\rangle$ & $\langle1,4\rangle$ & $\langle1,4\rangle$ \\
+& $\langle2,4\rangle$ & $\langle2,1\rangle$ & $\langle2,2\rangle$ \\
+& $\langle7,1\rangle$ & $\langle7,2\rangle$ & $\langle5,1\rangle$ \\
+& & $\langle8,5\rangle$ & $\langle7,7\rangle$ \\
+& & $\langle9,2\rangle$ & $\langle10,1\rangle$ \\
+& & $\langle11,5\rangle$ & $\langle11,8\rangle$ \\
+\end{tabular}
+\end{center}
+$\bf{In\ the\ 1^{st}\ cycle}$
+\par\setlength\parindent{2em} $\theta = 0$, curDoc = 0
+\begin{center}
+\begin{tabular}{lllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{Sorted Term}            & \multicolumn{1}{l|}{A} & \multicolumn{1}{l|}{B} & \multicolumn{1}{l|}{C}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Doc}                    & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{1}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Cumulative Upper Bound} & \multicolumn{1}{l|}{4} & \multicolumn{1}{l|}{9} & \multicolumn{1}{l|}{17} &  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\par\setlength\parindent{2em} $\bullet$ pTerm = A
+\par\setlength\parindent{2em} $\bullet$ pivot = posting[0].DID = 1
+\par\setlength\parindent{2em} $\bullet$ pivot $>$ curDoc $\bf{(Line 14)}$
+\par\setlength\parindent{4em} $\bullet$ posting[0].DID = pivot $\bf{(Line 15)}$
+\par\setlength\parindent{6em} curDoc = 1, $\theta = 11$
+\par\setlength\parindent{6em} return (curDoc, posting) \\
+$\bf{In\ the\ 2^{nd}\ cycle}$
+\par\setlength\parindent{2em} $\theta = 11$, curDoc = 1
+\begin{center}
+\begin{tabular}{lllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{Sorted Term}            & \multicolumn{1}{l|}{A} & \multicolumn{1}{l|}{B} & \multicolumn{1}{l|}{C}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Doc}                    & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{1}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Cumulative Upper Bound} & \multicolumn{1}{l|}{4} & \multicolumn{1}{l|}{9} & \multicolumn{1}{l|}{17} &  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\par\setlength\parindent{2em} $\bullet$ pTerm = C
+\par\setlength\parindent{2em} $\bullet$ pivot = posting[2].DID = 1
+\par\setlength\parindent{2em} $\bullet$ pivot $=$ curDoc $\bf{(Line 10)}$
+\par\setlength\parindent{4em} aterm = pickTerm(terms[0..pTerm])  $\bf{(the\ idf\ of\ A\ is\ biggest,\ choose\ A)}$
+\par\setlength\parindent{4em} posting[A].DID = 2 \\
+$\bf{In\ the\ 3^{rd}\ cycle}$
+\par\setlength\parindent{2em} $\theta = 11$, curDoc = 1
+\begin{center}
+\begin{tabular}{lllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{Sorted Term}            & \multicolumn{1}{l|}{B} & \multicolumn{1}{l|}{C} & \multicolumn{1}{l|}{A}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Doc}                    & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{2}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Cumulative Upper Bound} & \multicolumn{1}{l|}{5} & \multicolumn{1}{l|}{13} & \multicolumn{1}{l|}{17} &  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\par\setlength\parindent{2em} $\bullet$ pTerm = C
+\par\setlength\parindent{2em} $\bullet$ pivot = posting[1].DID = 1
+\par\setlength\parindent{2em} $\bullet$ pivot $=$ curDoc $\bf{(Line 10)}$
+\par\setlength\parindent{4em} aterm = pickTerm(terms[0..pTerm])  $\bf{(assume\ choose\ C)}$
+\par\setlength\parindent{4em} posting[C].DID = 2 \\
+$\bf{In\ the\ 4^{th}\ cycle}$
+\par\setlength\parindent{2em} $\theta = 11$, curDoc = 1
+\begin{center}
+\begin{tabular}{lllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{Sorted Term}            & \multicolumn{1}{l|}{B} & \multicolumn{1}{l|}{A} & \multicolumn{1}{l|}{C}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Doc}                    & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{2} & \multicolumn{1}{l|}{2}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Cumulative Upper Bound} & \multicolumn{1}{l|}{5} & \multicolumn{1}{l|}{9} & \multicolumn{1}{l|}{17} &  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\par\setlength\parindent{2em} $\bullet$ pTerm = C
+\par\setlength\parindent{2em} $\bullet$ pivot = posting[2].DID = 2
+\par\setlength\parindent{2em} $\bullet$ pivot $>$ curDoc $\bf{(Line 14)}$
+\par\setlength\parindent{4em} $\bullet$ curDoc $\neq$ posting[0].DID $\bf{(Line 19)}$
+\par\setlength\parindent{6em} aterm = pickTerm(terms[0..pTerm])  $\bf{(the\ idf\ of\ A\ is\ biggest,\ choose\ A)}$
+\par\setlength\parindent{6em} posting[A].DID = 7 \\
+$\bf{In\ the\ 5^{th}\ cycle}$
+\par\setlength\parindent{2em} $\theta = 11$, curDoc = 1
+\begin{center}
+\begin{tabular}{lllll}
+\cline{1-4}
+\multicolumn{1}{|l|}{Sorted Term}            & \multicolumn{1}{l|}{B} & \multicolumn{1}{l|}{C} & \multicolumn{1}{l|}{A}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Doc}                    & \multicolumn{1}{l|}{1} & \multicolumn{1}{l|}{2} & \multicolumn{1}{l|}{7}  &  \\ \cline{1-4}
+\multicolumn{1}{|l|}{Cumulative Upper Bound} & \multicolumn{1}{l|}{5} & \multicolumn{1}{l|}{13} & \multicolumn{1}{l|}{17} &  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\par\setlength\parindent{2em} $\bullet$ pTerm = C
+\par\setlength\parindent{2em} $\bullet$ pivot = posting[C].DID = 2
+\par\setlength\parindent{2em} $\bullet$ pivot $>$ curDoc $\bf{(Line 14)}$
+\par\setlength\parindent{4em} $\bullet$ posting[0].DID $\neq$ pivot $\bf{(Line 19)}$
+\par\setlength\parindent{6em} aterm = pickTerm(terms[0..pTerm])  $\bf{(the\ idf\ of\ A\ is\ biggest,\ choose\ A)}$
+\par\setlength\parindent{6em} posting[A].DID = 7 \\
+In this case, $\bf{pickTerm()}$ will always choose A because of the maximum idf. $\theta$, curDoc and other parameters would not change as well. \\
+Therefore, this algorithm will end up in an infinite loop.
+}
+
+
+\end{document}
